@@ -1,0 +1,32 @@
+
+services:
+  postgres:
+    container_name: nestjs_sequelize_pg_mem_postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - database
+    restart: unless-stopped
+
+  adminer:
+    container_name: nestjs_sequelize_pg_mem_adminer_container
+    image: adminer
+    ports:
+      - "5555:8080"
+    networks:
+      - database
+    restart: unless-stopped
+
+networks:
+  database:
+    driver: bridge
+
+volumes:
+    postgres:

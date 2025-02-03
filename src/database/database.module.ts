@@ -13,8 +13,9 @@ import { User } from '../user/user.entity';
       password: 'test_pass',
       models: [User],
       autoLoadModels: true,
-      synchronize: true,
+      synchronize: false,
     }),
+    SequelizeModule.forFeature([User]),
   ],
   exports: [SequelizeModule],
 })

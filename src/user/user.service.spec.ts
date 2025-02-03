@@ -2,46 +2,50 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from './user.entity';
 import { UserService } from './user.service';
-import { newDb } from 'pg-mem';
+import { DataType, newDb } from 'pg-mem';
 import { Sequelize } from 'sequelize-typescript';
 import { faker } from '@faker-js/faker';
 
 describe('UserService (Unit)', () => {
   let userService: UserService;
+  let sequelize: Sequelize;
 
   beforeAll(async () => {
     const db = newDb();
-    const sequelize = new Sequelize({
-      dialect: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      database: 'test_db',
-      username: 'test_user',
-      password: 'test_pass',
-      dialectModule: db.adapters.createPg(),
+    db.public.registerFunction({
+      name: 'now',
+      returns: DataType.timetz,
+      implementation: () => new Date(),
     });
+    sequelize = new Sequelize({
+      dialect: 'postgres',
+      dialectModule: db.adapters.createPg(),
+      logging: false,
+    });
+
+    sequelize.addModels([User]);
+    await sequelize.sync({ force: true });
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         SequelizeModule.forRoot({
           dialect: 'postgres',
-          host: 'localhost',
-          port: 5432,
-          database: 'test_db',
-          username: 'test_user',
-          password: 'test_pass',
+          storage: ':memory:',
           models: [User],
         }),
         SequelizeModule.forFeature([User]),
       ],
       providers: [UserService],
     })
-      .overrideProvider(SequelizeModule)
+      .overrideProvider(Sequelize)
       .useValue(sequelize)
       .compile();
 
     userService = module.get<UserService>(UserService);
-    await sequelize.sync();
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
   });
 
   it('should create a user', async () => {

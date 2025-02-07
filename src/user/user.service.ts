@@ -4,9 +4,12 @@ import { User } from './user.entity';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User) private userModel: typeof User) {}
+  constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
   async createUser(name: string, email: string): Promise<User> {
+    if (!name || !email) {
+      throw Error('Error');
+    }
     return this.userModel.create({ name, email });
   }
 

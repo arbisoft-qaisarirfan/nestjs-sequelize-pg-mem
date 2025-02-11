@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { up as userTable } from '../migrations/20250203115647-create-users';
 import { DataType, newDb } from 'pg-mem';
 import { User } from '../src/user/user.entity';
+import { Product } from '../src/products/product.entity';
 
 export function createTestingModule(): TestingModuleBuilder {
   return Test.createTestingModule({
@@ -56,13 +57,16 @@ export function createInMemorySequelize() {
   const db = newDb();
   db.public.registerFunction({
     name: 'now',
-    returns: DataType.timetz,
-    implementation: () => new Date(),
+    returns: DataType.timestamp,
+    implementation: () => new Date().toISOString(),
   });
   return new Sequelize({
     dialect: 'postgres',
     dialectModule: db.adapters.createPg(),
     logging: true,
-    models: [User],
+    models: [User, Product],
+    dialectOptions: {
+      useUTC: false,
+    },
   });
 }

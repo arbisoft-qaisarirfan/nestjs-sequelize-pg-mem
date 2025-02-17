@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { User } from '../user/user.entity';
 import { Product } from '../products/product.entity';
+import { Book } from '../books/entities/book.entity';
 
 @Global()
 @Module({
@@ -17,7 +18,7 @@ import { Product } from '../products/product.entity';
           return {
             dialect: 'postgres',
             storage: ':memory:',
-            models: [User, Product],
+            models: [User, Product, Book],
             autoLoadModels: true, // No need to register models manually
             dialectOptions: {
               useUTC: false,
@@ -31,7 +32,7 @@ import { Product } from '../products/product.entity';
             username: configService.get('DB_USER'),
             password: configService.get('DB_PASS'),
             database: configService.get('DB_NAME'),
-            models: [User, Product], // Add all models here
+            models: [User, Product, Book], // Add all models here
             autoLoadModels: true, // No need to register models manually
             synchronize: isTestEnv, // Sync in test env but not in prod
             logging: !isTestEnv,

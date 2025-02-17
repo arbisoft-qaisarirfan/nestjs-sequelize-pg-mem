@@ -9,6 +9,7 @@ import { up as userTable } from '../migrations/20250203115647-create-users';
 import { DataType, newDb } from 'pg-mem';
 import { User } from '../src/user/user.entity';
 import { Product } from '../src/products/product.entity';
+import { Book } from '../src/books/entities/book.entity';
 
 export function createTestingModule(): TestingModuleBuilder {
   return Test.createTestingModule({
@@ -64,7 +65,7 @@ export function createInMemorySequelize() {
     dialect: 'postgres',
     dialectModule: db.adapters.createPg(),
     logging: true,
-    models: [User, Product],
+    models: [User, Product, Book],
     dialectOptions: {
       useUTC: false,
     },

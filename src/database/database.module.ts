@@ -5,6 +5,10 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../user/user.entity';
 import { Product } from '../products/product.entity';
 import { Book } from '../books/entities/book.entity';
+import { BookDetails } from '../books/entities/bookDetails.entity';
+import { Review } from '../books/entities/review.entity';
+import { Author } from '../books/entities/author.entity';
+import { BookAuthor } from '../books/entities/bookAuthor.entity';
 
 @Global()
 @Module({
@@ -18,11 +22,17 @@ import { Book } from '../books/entities/book.entity';
           return {
             dialect: 'postgres',
             storage: ':memory:',
-            models: [User, Product, Book],
+            models: [
+              User,
+              Product,
+              Book,
+              BookDetails,
+              Review,
+              Author,
+              BookAuthor,
+            ],
             autoLoadModels: true, // No need to register models manually
-            dialectOptions: {
-              useUTC: false,
-            },
+            dialectOptions: { useUTC: false },
           };
         } else {
           return {
@@ -32,15 +42,31 @@ import { Book } from '../books/entities/book.entity';
             username: configService.get('DB_USER'),
             password: configService.get('DB_PASS'),
             database: configService.get('DB_NAME'),
-            models: [User, Product, Book], // Add all models here
+            models: [
+              User,
+              Product,
+              Book,
+              BookDetails,
+              Review,
+              Author,
+              BookAuthor,
+            ], // Add all models here
             autoLoadModels: true, // No need to register models manually
             synchronize: isTestEnv, // Sync in test env but not in prod
-            logging: !isTestEnv,
+            logging: false,
           };
         }
       },
     }),
-    SequelizeModule.forFeature([User, Product]),
+    SequelizeModule.forFeature([
+      User,
+      Product,
+      Book,
+      BookDetails,
+      Review,
+      Author,
+      BookAuthor,
+    ]),
   ],
   exports: [SequelizeModule],
 })

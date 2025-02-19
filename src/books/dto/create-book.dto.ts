@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -5,7 +6,36 @@ import {
   IsOptional,
   Min,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+
+export class CreateBookDetailsDto {
+  readonly pageCount: number;
+  readonly language: string;
+  readonly publisher: string;
+  readonly edition: string;
+  readonly bookId: string;
+}
+
+export class CreateReviewDto {
+  readonly reviewerName: string;
+  readonly rating: number;
+  readonly comment?: string;
+  readonly bookId: string;
+}
+
+export class CreateAuthorDto {
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly birthDate?: Date;
+  readonly biography?: string;
+}
+
+export class CreateBookAuthorDto {
+  readonly bookId: string;
+  readonly authorId: string;
+  readonly role?: string;
+}
 
 export class CreateBookDto {
   @IsString()
@@ -23,8 +53,20 @@ export class CreateBookDto {
   @MaxLength(5000)
   readonly description?: string;
 
-  @IsOptional()
   @IsNumber()
   @Min(0, { message: 'Price must be greater than or equal to 0' })
-  readonly price?: number;
+  readonly publicationYear?: number;
+
+  @IsString()
+  readonly isbn?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateBookDetailsDto)
+  details?: CreateBookDetailsDto;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBookAuthorDto) // Ensure authors are validated correctly
+  authors?: CreateBookAuthorDto[];
 }

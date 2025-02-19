@@ -1,7 +1,10 @@
 'use strict';
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    console.log('Sequelize object:', Sequelize); // Debugging line
+
     await queryInterface.createTable('Books', {
       id: {
         type: Sequelize.UUID,
@@ -21,9 +24,13 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      price: {
+      publicationYear: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
+        allowNull: true,
+      },
+      isbn: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
@@ -36,7 +43,7 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('Books');
   },
 };

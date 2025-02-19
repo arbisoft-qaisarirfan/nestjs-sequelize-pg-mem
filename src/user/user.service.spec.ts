@@ -6,9 +6,12 @@ import {
   cleanupTest,
   createAppFrom,
   createTestingModule,
+  usersMigration,
 } from '../../test/test-utils';
 import { INestApplication } from '@nestjs/common';
 import { User } from './user.entity';
+import { getConnectionToken } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize';
 
 describe('User Module Tests', () => {
   let userService: UserService;
@@ -21,6 +24,8 @@ describe('User Module Tests', () => {
     app = await createAppFrom(module, true);
     userService = app.get<UserService>(UserService);
     userController = app.get<UserController>(UserController);
+    const sequelize: Sequelize = await app.resolve(getConnectionToken());
+    await usersMigration(sequelize.getQueryInterface());
   });
 
   afterEach(async () => {
@@ -163,10 +168,7 @@ describe('User Module Tests', () => {
           email,
         });
         await expect(
-          userController.createUser({
-            name: faker.person.fullName(),
-            email,
-          }),
+          userController.createUser({ name: faker.person.fullName(), email }),
         ).rejects.toThrow();
       });
     });

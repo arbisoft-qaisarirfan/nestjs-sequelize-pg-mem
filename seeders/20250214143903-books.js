@@ -1,17 +1,16 @@
 'use strict';
-
 const { v4: uuidv4 } = require('uuid');
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return queryInterface.bulkInsert('Books', [
+    const books = [
       {
         id: uuidv4(),
-        title: 'The Great Gatsby',
-        author: 'F. Scott Fitzgerald',
-        description: 'A story of decadence and excess.',
-        price: 999,
+        title: 'Harry Potter and the Philosopher\'s Stone',
+        author: 'J.K. Rowling',
+        description: 'The first book in the Harry Potter series.',
+        publicationYear: 1997,
+        isbn: '9780747532743',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -20,23 +19,34 @@ module.exports = {
         title: '1984',
         author: 'George Orwell',
         description: 'A dystopian social science fiction novel.',
-        price: 1099,
+        publicationYear: 1949,
+        isbn: '9780451524935',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
         id: uuidv4(),
-        title: 'To Kill a Mockingbird',
-        author: 'Harper Lee',
-        description: 'A story of racial inequality and justice.',
-        price: 1199,
+        title: 'Pride and Prejudice',
+        author: 'Jane Austen',
+        description: 'A romantic novel of manners.',
+        publicationYear: 1813,
+        isbn: '9780141439518',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);
+    ];
+
+    // Store generated IDs for use in other seeders
+    const bookIds = books.map((b) => b.id);
+    await queryInterface.bulkInsert('Books', books);
+
+    // Save book IDs for other seeders
+    global.bookIds = bookIds;
+    global.books = books.map(book => ({ id: book.id, title: book.title, author: book.author }));
+    return bookIds;
   },
 
   down: async (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('Books', null, {});
+    await queryInterface.bulkDelete('Books', null, {});
   },
 };

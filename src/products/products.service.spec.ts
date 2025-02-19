@@ -4,14 +4,12 @@ import {
   cleanupTest,
   createAppFrom,
   createTestingModule,
+  productsMigration,
 } from '../../test/test-utils';
 import { INestApplication, NotFoundException } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 import { getConnectionToken } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize';
-// Seeders
-// import { up } from '../../seeders/20250207155022-products';
-import { up as productTable } from '../../migrations/20250207145740-products';
 
 describe('ProductService', () => {
   let service: ProductService;
@@ -24,9 +22,7 @@ describe('ProductService', () => {
     app = await createAppFrom(module, true);
     const sequelize: Sequelize = await app.resolve(getConnectionToken());
 
-    await productTable(sequelize.getQueryInterface(), Sequelize);
-    // Seeders
-    // await up(sequelize.getQueryInterface());
+    await productsMigration(sequelize.getQueryInterface());
 
     service = app.get<ProductService>(ProductService);
     controller = app.get<ProductController>(ProductController);
@@ -178,9 +174,16 @@ describe('ProductService', () => {
       stock: 10,
     });
 
+    const parseDate = (date: unknown): number => {
+      if (typeof date === 'string' || date instanceof Date) {
+        return new Date(date).getTime();
+      }
+      throw new Error('Invalid date format');
+    };
+
     const updatedProduct = await service.update(product.id, { stock: 20 });
-    expect(new Date(updatedProduct.updatedAt).getTime()).toBeGreaterThan(
-      new Date(product.updatedAt).getTime(),
+    expect(parseDate(updatedProduct.updatedAt)).toBeGreaterThan(
+      parseDate(product.updatedAt),
     );
   });
 

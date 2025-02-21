@@ -522,8 +522,6 @@ describe('BooksController (e2e)', () => {
           payload.authors[0].authorId = testAuthor.id;
         }
 
-        console.log('payload.authors', payload.authors);
-
         const response = await fetch(`${server}/books/${testBook.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

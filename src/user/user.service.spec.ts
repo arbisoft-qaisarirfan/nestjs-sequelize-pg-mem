@@ -1,7 +1,5 @@
 import { faker } from '@faker-js/faker';
 import { UserService } from './user.service';
-import { UserController } from './user.controller';
-
 import {
   cleanupTest,
   createAppFrom,
@@ -12,24 +10,30 @@ import { INestApplication } from '@nestjs/common';
 import { User } from './user.entity';
 import { getConnectionToken } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize';
+import { UserController } from './user.controller';
 
-describe('User Module Tests', () => {
+interface UserStats {
+  total_users: string;
+  active_users: string;
+}
+
+describe('Enhanced User Module Tests', () => {
   let userService: UserService;
   let userController: UserController;
   let app: INestApplication;
+  let sequelize: Sequelize;
 
   beforeEach(async () => {
     const module = createTestingModule();
-
     app = await createAppFrom(module, true);
     userService = app.get<UserService>(UserService);
     userController = app.get<UserController>(UserController);
-    const sequelize: Sequelize = await app.resolve(getConnectionToken());
+    sequelize = await app.resolve(getConnectionToken());
     await usersMigration(sequelize.getQueryInterface());
   });
 
   afterEach(async () => {
-    await cleanupTest(app); // Close the app after all tests
+    await cleanupTest(app);
   });
 
   describe('UserService', () => {
@@ -199,18 +203,6 @@ describe('User Module Tests', () => {
       expect(user).toHaveProperty('name');
       expect(user).toHaveProperty('email');
     });
-
-    it('should auto-increment id', async () => {
-      const user1 = await userService.createUser(
-        faker.person.fullName(),
-        faker.internet.email(),
-      );
-      const user2 = await userService.createUser(
-        faker.person.fullName(),
-        faker.internet.email(),
-      );
-      expect(user2.id).toBe(user1.id + 1);
-    });
   });
 
   describe('Edge Cases', () => {
@@ -248,6 +240,133 @@ describe('User Module Tests', () => {
       expect(users).toHaveLength(5);
       const ids = users.map((user) => user.id);
       expect(new Set(ids).size).toBe(5); // All IDs should be unique
+    });
+  });
+
+  describe('Transaction Tests', () => {
+    it('should create multiple users in a transaction', async () => {
+      const usersData = Array(3)
+        .fill(null)
+        .map(() => ({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+        }));
+
+      const users = await userService.createMultipleUsers(usersData);
+      expect(users).toHaveLength(3);
+      expect(users[0].id).toBeDefined();
+    });
+
+    it('should rollback transaction on error', async () => {
+      const usersData = [
+        { name: faker.person.fullName(), email: faker.internet.email() },
+        { name: faker.person.fullName(), email: faker.internet.email() },
+        { name: '', email: '' }, // Invalid user data to trigger rollback
+      ];
+
+      await expect(
+        userService.createMultipleUsers(usersData),
+      ).rejects.toThrow();
+      const users = await userService.getUsers();
+      expect(users).toHaveLength(0); // Transaction should have rolled back
+    });
+  });
+
+  describe('Operator Tests', () => {
+    beforeEach(async () => {
+      // Create test users
+      await userService.createUser('Test User', 'test@example.com');
+      await userService.createUser('Another User', 'another@example.com');
+      await userService.createUser('Final User', 'final@example.com');
+    });
+
+    it('should search users using iLike operator', async () => {
+      const users = await userService.searchUsers('test');
+      expect(users).toHaveLength(1);
+      expect(users[0].email).toBe('test@example.com');
+    });
+
+    it('should find users by login count using gte operator', async () => {
+      await userService.incrementLoginCount(
+        (await userService.getUserByEmail('test@example.com'))?.id ?? '',
+      );
+      await userService.incrementLoginCount(
+        (await userService.getUserByEmail('test@example.com'))?.id ?? '',
+      );
+
+      const users = await userService.getUsersByLoginCount(2);
+      expect(users).toHaveLength(1);
+      expect(users[0].email).toBe('test@example.com');
+    });
+  });
+
+  describe('Raw Query Tests', () => {
+    it('should return correct user statistics', async () => {
+      // Create active users
+      await User.bulkCreate([
+        {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          isActive: true,
+        },
+        {
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          isActive: true,
+        },
+      ]);
+
+      // Create inactive user
+      await User.create({
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        isActive: false,
+      });
+
+      const results = (await userService.executeRawQuery()) as UserStats[];
+
+      expect(results).toHaveLength(1);
+      expect(results[0].total_users).toBe(3);
+      expect(results[0].active_users).toBe(2);
+    });
+
+    it('should handle empty table', async () => {
+      const results = (await userService.executeRawQuery()) as UserStats[];
+
+      expect(results).toHaveLength(1);
+      expect(results[0].total_users).toBe(0);
+      expect(results[0].active_users).toBe(null);
+    });
+
+    it('should handle large number of users', async () => {
+      const usersToCreate = Array(10)
+        .fill(null)
+        .map(() => ({
+          name: faker.person.fullName(),
+          email: faker.internet.email(),
+          isActive: Math.random() > 0.5, // randomly set active status
+        }));
+
+      await User.bulkCreate(usersToCreate);
+
+      const results = (await userService.executeRawQuery()) as UserStats[];
+      const activeCount = usersToCreate.filter((u) => u.isActive).length;
+
+      expect(results).toHaveLength(1);
+      expect(results[0].total_users).toBe(usersToCreate.length);
+      expect(results[0].active_users).toBe(activeCount);
+    });
+  });
+
+  describe('UUID Tests', () => {
+    it('should generate UUID for new users', async () => {
+      const user = await userService.createUser(
+        faker.person.fullName(),
+        faker.internet.email(),
+      );
+      expect(user.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      );
     });
   });
 });

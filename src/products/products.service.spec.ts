@@ -115,7 +115,6 @@ describe('ProductService', () => {
 
   it('should return an empty array when no products exist', async () => {
     const result = await service.findAll();
-    console.log(result);
     expect(result).toEqual([]);
   });
 

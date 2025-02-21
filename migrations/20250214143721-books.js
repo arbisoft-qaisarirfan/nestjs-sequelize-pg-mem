@@ -3,8 +3,6 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    console.log('Sequelize object:', Sequelize); // Debugging line
-
     await queryInterface.createTable('Books', {
       id: {
         type: Sequelize.UUID,
@@ -43,7 +41,9 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface) => {
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('BookAuthors');
+    await queryInterface.dropTable('Reviews');
     await queryInterface.dropTable('Books');
   },
 };

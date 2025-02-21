@@ -50,8 +50,6 @@ export class BooksController {
   ): Promise<Book[]> {
     const { title, author, publicationYear, isbn } = query;
 
-    console.log('query', query);
-
     const whereCondition = {};
 
     if (title) {

@@ -1,13 +1,50 @@
-import { Column, Model, Table } from 'sequelize-typescript';
+import { Column, Model, Table, DataType } from 'sequelize-typescript';
 
-@Table
+@Table({
+  timestamps: true,
+})
 export class User extends Model {
-  @Column({ primaryKey: true, autoIncrement: true })
-  id: number;
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    defaultValue: DataType.UUIDV4,
+  })
+  id: string;
 
-  @Column
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
   name: string;
 
-  @Column({ unique: true })
+  @Column({
+    type: DataType.STRING,
+    unique: true,
+    allowNull: false,
+  })
   email: string;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  createdAt: Date;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+  })
+  updatedAt: Date;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: true,
+  })
+  isActive: boolean;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  loginCount: number;
 }

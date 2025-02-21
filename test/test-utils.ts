@@ -72,7 +72,7 @@ export function createInMemorySequelize(): Sequelize {
   return new Sequelize({
     dialect: 'postgres',
     dialectModule: db.adapters.createPg(),
-    logging: true,
+    logging: false,
     models: [User, Product, Book, BookDetails, Review, Author, BookAuthor],
     dialectOptions: { useUTC: false },
   });

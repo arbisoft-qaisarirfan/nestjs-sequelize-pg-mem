@@ -64,7 +64,6 @@ export class BooksService {
     id: string,
     updateBookDto: UpdateBookDto,
   ): Promise<[number, Book[]]> {
-    console.log(updateBookDto);
     const [affectedCount, updatedBooks] = await this.bookModel.update(
       { ...updateBookDto },
       { where: { id }, returning: true },

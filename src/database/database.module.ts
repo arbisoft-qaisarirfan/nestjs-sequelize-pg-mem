@@ -33,6 +33,7 @@ import { BookAuthor } from '../books/entities/bookAuthor.entity';
             ],
             autoLoadModels: true, // No need to register models manually
             dialectOptions: { useUTC: false },
+            logging: false,
           };
         } else {
           return {

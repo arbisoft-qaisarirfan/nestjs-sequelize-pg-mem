@@ -369,4 +369,50 @@ describe('Enhanced User Module Tests', () => {
       );
     });
   });
+
+  describe('Count and Aggregation Tests', () => {
+    beforeEach(async () => {
+      // Create test users with different roles and login counts
+      await userService.createUser('User 1', 'user1@example.com');
+      await userService.createUser('User 2', 'user2@example.com');
+      await userService.createUser('User 3', 'user3@example.com');
+      await userService.createUser('User 4', 'user4@example.com');
+
+      // Increment login counts for some users
+      const user1 = await userService.getUserByEmail('user1@example.com');
+      const user2 = await userService.getUserByEmail('user2@example.com');
+      if (user1 && user2) {
+        await userService.incrementLoginCount(user1.id);
+        await userService.incrementLoginCount(user2.id);
+        await userService.incrementLoginCount(user2.id); // User 2 has 2 logins
+      }
+    });
+
+    it('should count all users', async () => {
+      const totalUsers = await userService.getUsers();
+      expect(totalUsers.length).toBe(4);
+    });
+
+    it('should count active users', async () => {
+      const activeUserCount = await userService.getUsers({
+        where: { isActive: true },
+      });
+      expect(activeUserCount.length).toBe(4); // All users are active by default
+    });
+
+    it('should sum login counts', async () => {
+      const totalLoginCount = await User.sum('loginCount');
+      expect(totalLoginCount).toBe(3); // User1: 1, User2: 2, others: 0
+    });
+
+    it('should find minimum login count', async () => {
+      const minLoginCount = await User.min('loginCount');
+      expect(minLoginCount).toBe(0); // Minimum login count is 0
+    });
+
+    it('should find maximum login count', async () => {
+      const maxLoginCount = await User.max('loginCount');
+      expect(maxLoginCount).toBe(2); // Maximum login count is 2 (User2)
+    });
+  });
 });
